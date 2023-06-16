@@ -1,35 +1,38 @@
-pragma solidity >=0.4.19;
+pragma solidity ^0.4.19;
 
-contract ZombieFactore {
-    event NewZombie(uint zombieId, string name, uint dna); //Создание события
-    uint dnaDigins = 16;
-    // задали длину днк Зомби
+contract ZombieFactory {
 
-    uint dnaModulus = 10 ** dnaDigins;
-    // Проверка что днк равна 16 числам.
-}
-   struct Zombie {
-      string name;
-      uint dna;
-      // создается структура зомби
-   }
-    Zombie[] public zombies; 
-    // Создание массива
+    event NewZombie(uint zombieId, string name, uint dna);
 
-   function _createZomie (string _name, uint _dna) private{
-    // Функция для производства Зомби (Она закрытая)
-    uint id = zombies.push(Zombie(_name, _dna)) -1;
-    enit NewZombie(id,_name,_dna);
-   }
-   function _generateRandomDna(string _str) private view returns (uint){
-    // Функция для создания рандомных значений ДНК
-     uint rand =  uint(keccak256(_str)); //При помощи кеширования создаём рандомные 16 цифр
+    uint dnaDigits = 16;
+    uint dnaModulus = 10 ** dnaDigits;
+
+    struct Zombie {
+        string name;
+        uint dna;
+    }
+
+    Zombie[] public zombies;
+
+    mapping (uint => address) public zombieToOwner;
+    mapping (address => uint) ownerZombieCount;
+
+    function _createZombie(string _name, uint _dna) private {
+        uint id = zombies.push(Zombie(_name, _dna)) - 1;
+        zombieToOwner[id] = msg.sender;
+        ownerZombieCount[msg.sender]++;
+        NewZombie(id, _name, _dna);
+    }
+
+    function _generateRandomDna(string _str) private view returns (uint) {
+        uint rand = uint(keccak256(_str));
         return rand % dnaModulus;
-   }
-     function createRandomZombie(string _name) public {
-        uuint id = zombies.push(Zombie(_name, _dna)) - 1;
-        NewZombie(id, _name, _dna); 
-        // Всю башку сломал! Нужно быть аккуратней с пробелами.если пробел стоит там где его не должно быть будет ошибка. 
+    }
+
+    function createRandomZombie(string _name) public {
+        require(ownerZombieCount[msg.sender] == 0);
+        uint randDna = _generateRandomDna(_name);
+        _createZombie(_name, randDna);
     }
 
 }
